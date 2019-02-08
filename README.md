@@ -1,2 +1,0 @@
-# VIX
-VIX for quantlet

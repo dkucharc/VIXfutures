@@ -1,9 +1,9 @@
 rm(list = ls(all = TRUE))
 # install and load packages
 libraries = c("plotly", "formatR", "quantmod", "chron", "dplyr", "lubridate", "xts", "plyr", "car", "nortest", "tseries", "urca", "RColorBrewer", 
-    "dgof", "ks", "KernSmooth", "zoo")
-lapply(libraries, function(x) if (!(x %in% installed.packages())) {
-    install.packages(x)
+              "dgof", "ks", "KernSmooth", "zoo")
+lapply(libraries, function(x) if (!(x %in% rownames(installed.packages()))) {
+  install.packages(x)
 })
 lapply(libraries, library, quietly = TRUE, character.only = TRUE)
 source("VIXfutureshelper.R")
@@ -18,10 +18,10 @@ head(vix_spot_df)
 # on the VIX The VIX futures and the VIX index have substantially deviated from each other already the day before, indicating substantial
 # turmoil in the VIX markets.
 VIXindex = restrict_to_start_end_date(vix_spot_df, data_type = "spot", start_time = "08:30:00", end_time = "15:15:00", start_date = "2018-02-05", 
-    end_date = "2018-02-05")
+                                      end_date = "2018-02-05")
 head(VIXindex)
 VIXfutures = restrict_to_start_end_date(vix_quote_tick_df, data_type = "tick", start_time = "08:30:00", end_time = "15:15:00", start_date = "2018-02-05", 
-    end_date = "2018-02-05")
+                                        end_date = "2018-02-05")
 # Use the front month future
 VIXfutures = VIXfutures %>% filter(EXPR_DATE == "FEB18")
 head(VIXfutures)
@@ -37,10 +37,12 @@ head(VIXfutures_Index)
 VIXfutures_Index = xts(VIXfutures_Index[, c("MID_QUOTE", "INDEX_VALUE")], order.by = VIXfutures_Index$Datetime)
 colnames(VIXfutures_Index) = c("Futures", "VIX Index")
 head(VIXfutures_Index)
+
 # plot the index and the future
+png(filename = "VIXIndex_Future.png", width = 924, height = 651)
 colors = brewer.pal(n = 6, name = "Paired")[c(6, 2)]
 plot(as.zoo(VIXfutures_Index), observation.based = T, legend.loc = "topleft", screens = 1, grid.ticks.lty = 3, major.ticks = "hours", ylab = "price", 
-    xlab = "time", main = "VIX index and future on February 5, 2018", grid.ticks.on = "hours", yaxis.right = FALSE, col = colors, lty = 1:2,
-    lwd = c(4, 4), yaxis.same = TRUE)
+     xlab = "time", main = "VIX index and future on February 5, 2018", grid.ticks.on = "hours", yaxis.right = FALSE, col = colors, lty = 1:2,
+     lwd = c(4, 4), yaxis.same = TRUE)
 legend("topleft", legend = c("VIX future", "VIX index"), col = colors, lty = 1:2, lwd = c(4, 4))
-
+dev.off()
