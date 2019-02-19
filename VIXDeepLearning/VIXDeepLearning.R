@@ -32,7 +32,7 @@ log_df <-
 # Split the data into train and test datasets
 train_interval <- interval('2018-01-01', '2018-01-31', tz="CET")
 train_df <- log_df %>% filter(DATETIME %within% train_interval)
-s
+
 x_train <- train_df %>% select(-DATE, -DATETIME, -VIX, -VIX_PRED)
 y_train <- train_df %>% select(VIX_PRED)
 
