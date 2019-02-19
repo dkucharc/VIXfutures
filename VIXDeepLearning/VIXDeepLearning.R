@@ -42,35 +42,37 @@ test_df <- log_df %>% filter(DATETIME %within% test_interval)
 x_test <- test_df %>% select(-DATE, -DATETIME, -VIX, -VIX_PRED)
 y_test <- test_df %>% select(VIX_PRED)
 
-# Build keras model
-
+# Data manipulation required by LSTM model
 x_train_lstm <- as.matrix(x_train) 
 dim(x_train_lstm) <- c(dim(x_train)[[1]], 1, dim(x_train)[[2]])
 y_train_lstm <- as.array(unlist(y_train))
 
-x_test_lstm <- as.matrix(x_train) 
-dim(x_test_lstm) <- c(dim(x_train)[[1]], 1, dim(x_train)[[2]])
+x_test_lstm <- as.matrix(x_test) 
+dim(x_test_lstm) <- c(dim(x_test)[[1]], 1, dim(x_test)[[2]])
 y_test_lstm <- as.array(unlist(y_test))
 
-# Build keras model
-
-batch_size <- 10
-activation <- 'tanh'
-dropout_rate <- 0.2
-
+# Define the model
 model <- keras_model_sequential()
 
 model %>%
   layer_lstm(
     units = 50,
-    input_shape = c(1, amount),
-    batch_size = batch_size,
+    input_shape = c(1, 10),
+    batch_size = 10,
     return_sequences = FALSE,
-    activation = activation,
+    activation = 'tanh',
     stateful = TRUE,
-    dropout = dropout_rate
-  ) %>% layer_dense(units = 1, activation="linear")
+    dropout = 0.2
+  ) %>% 
+  layer_dense(
+    units = 1, 
+    activation="linear"
+    )
 
 model %>% 
-  compile(loss = 'mse', optimizer=optimizer_adam(lr = 10^-3, decay = 0.001), metrics = c('mae', 'mse'))
+  compile(
+    loss = 'mse', 
+    optimizer=optimizer_adam(lr = 10^-3, decay = 0.001), 
+    metrics = c('mae', 'mse')
+    )
 
