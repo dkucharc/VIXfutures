@@ -9,13 +9,11 @@ lapply(libraries, function(x) if (!(x %in% installed.packages())) {
 })
 lapply(libraries, library, quietly = TRUE, character.only = TRUE)
 
-# load the data Make surce the main repo folder has been set up as a working
-# directory DATETIME is given in CET
+# load the data Make surce the main repo folder has been set up as a working directory DATETIME is given in CET
 df <- readRDS(file.path(getwd(), "VIXDeepLearning", "data", "raw", "VIX_Sp500.Rdata"))
 
 # Calculate log-returns
-log_df <- df %>% arrange(DATETIME) %>% group_by(DATE) %>% mutate_at(vars(-DATETIME, 
-    -DATE), .funs = function(x) log(x/lag(x))) %>% ungroup() %>% select(DATETIME, 
+log_df <- df %>% arrange(DATETIME) %>% group_by(DATE) %>% mutate_at(vars(-DATETIME, -DATE), .funs = function(x) log(x/lag(x))) %>% ungroup() %>% select(DATETIME, 
     DATE, everything()) %>% mutate(VIX_PRED = lead(VIX)) %>% drop_na()
 
 # Split the data into train and test datasets
@@ -43,10 +41,30 @@ y_test_lstm <- as.array(unlist(y_test))
 # Define the model
 model <- keras_model_sequential()
 
-model %>% layer_lstm(units = 50, input_shape = c(1, 10), batch_size = 10, return_sequences = FALSE, 
-    activation = "tanh", stateful = TRUE, dropout = 0.2) %>% layer_dense(units = 1, 
-    activation = "linear")
+model %>% layer_lstm(units = 50, input_shape = c(1, 10), batch_size = 10, return_sequences = FALSE, activation = "tanh", stateful = TRUE, dropout = 0.2) %>% 
+    layer_dense(units = 1, activation = "linear")
 
-model %>% compile(loss = "mse", optimizer = optimizer_adam(lr = 10^-3, decay = 0.001), 
-    metrics = c("mae", "mse"))
+model %>% compile(loss = "mse", optimizer = optimizer_adam(lr = 10^-3, decay = 0.001), metrics = c("mae", "mse"))
 
+# Train the model
+model %>% fit(x_train_lstm, y_train_lstm, batch_size = 10, epochs = 10, verbose = 2, shuffle = FALSE, validation_split = 0.2)
+
+# Predict VIX return using the test data
+y_test_predict <- model %>% predict(x_test_lstm, batch_size = 10, verbose = 1)
+
+# Add prediction column to the initial dataset
+test_df %>% add_column(MODEL_PRED = as.vector(y_test_predict))
+
+model_vix_ret_pred <- test_df %>% select(DATETIME, MODEL_PRED)
+
+# Compare the model prediction on the index level
+vix_pred <- df %>% filter(DATE %within% test_interval) %>% select(DATETIME, VIX) %>% left_join(model_vix_ret_pred) %>% mutate(VIX_PRED = lag(VIX * exp(MODEL_PRED)))
+
+# Plot the results using ggplot
+vix_plot_data <- vix_pred %>% select(-MODEL_PRED) %>% gather(Type, Price, -DATETIME)
+vix_plot_data <- vix_plot_data %>% group_by(Type) %>% mutate(id = row_number())
+
+ggplot(vix_plot_data, aes(x = id, y = Price)) + geom_line(aes(color = Type), size = 0.5) + scale_color_manual(values = c("#00AFBB", "#E7B800")) + theme_minimal() + 
+    scale_x_continuous(name = "Observation") + ggtitle("LSTM based VIX prediction") + theme(plot.title = element_text(hjust = 0.5))
+
+ggsave(file.path(getwd(), "VIXDeepLearning", "LSTM_VIX_Prediction.png"), dpi = 120, width = 6, height = 4, units = "in")
