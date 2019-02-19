@@ -3,6 +3,3 @@
 ## ![qlogo](http://quantnet.wiwi.hu-berlin.de/graphics/quantlogo.png) **[VIX Futures](VIXFutures)**
 
 ## ![qlogo](http://quantnet.wiwi.hu-berlin.de/graphics/quantlogo.png) **[VIX Deep Learning](VIXDeepLearning)**
-
-
-### Abstract of the work:
