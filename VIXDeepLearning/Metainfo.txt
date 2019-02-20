@@ -3,19 +3,17 @@ Name of Quantlet : VIXDeepLearning
 
 Published in :  'Neural Networks and Arbitrage in the VIX. A Deep Learning Approach for the VIX'
 
-Description : 'Contains the VIX index and the SP500 Index intraday analysis on the tail-event day of February 5, 2018. 
-The next day, Credit Suisse lost 500m USD because of a structured product on the VIX. '
+Description : 'Contains the LSTM model used to predict the VIX index by using the SP500 option intraday data.'
 
 Keywords : 
  - VIX
- - arbitrage
- - market manipulation
- - index
+ - SP500
+ - LSTM
 
 Author : Daniel Kucharczyk
 
-Submitted :  Fri, Feb 19 2019 by Joerg Osterrieder
+Submitted :  Fri, Feb 19 2019 by Daniel Kucharczyk
 
-Datafile : VIXData.RData, VIXfutureshelper.R
+Datafile : data/raw/VIX_SP500.RData
 
-Example: VIX index prediction using SP500 data.
+Example: LSTM based VIX index prediction using SP500 data.
